@@ -4,12 +4,19 @@
 name: Deploy to Firebase Hosting on PR
 "on": pull_request
 jobs:
-  unit_test:
+  npm_install:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: npm ci && npm run test:unit
+      - run: npm ci
+  unit_test:
+    needs: [npm_install]
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - run: npm run test:unit
   e2e_test:
+    needs: [npm_install]
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
@@ -24,11 +31,11 @@ jobs:
         env:
           CYPRESS_baseUrl: http://localhost:8080/
   build_and_preview:
-    needs: [unit_test, e2e_test]
+    needs: [npm_install, unit_test, e2e_test]
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
-      - run: npm ci && npm run build
+      - run: npm run build
       - uses: FirebaseExtended/action-hosting-deploy@v0
         with:
           repoToken: "${{ secrets.GITHUB_TOKEN }}"
